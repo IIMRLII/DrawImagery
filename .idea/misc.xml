@@ -3,7 +3,12 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/DrawImagery/app/src/main/res/layout/activity_main.xml" value="0.2265625" />
+        <entry key="..\:/DrawImagery/app/src/main/res/drawable/clear.xml" value="0.16302083333333334" />
+        <entry key="..\:/DrawImagery/app/src/main/res/drawable/eraser.xml" value="0.16302083333333334" />
+        <entry key="..\:/DrawImagery/app/src/main/res/drawable/pen.xml" value="0.16302083333333334" />
+        <entry key="..\:/DrawImagery/app/src/main/res/drawable/toolbar_item_bg.xml" value="0.24270833333333333" />
+        <entry key="..\:/DrawImagery/app/src/main/res/drawable/undo.xml" value="0.16302083333333334" />
+        <entry key="..\:/DrawImagery/app/src/main/res/layout/activity_main.xml" value="0.16393442622950818" />
       </map>
     </option>
   </component>

@@ -24,9 +24,8 @@ public class MainCanvas extends View {
 
     private int view_width = 0;          //屏幕的宽度
     private int view_height = 0;         //屏幕的高度
-    Bitmap cacheBitmap = null;          //定义一个内存中的图片，该图片作为缓冲区
-    Canvas cacheCanvas = null;          //定义cacheBitmap上的Canvas对象
-
+    public Bitmap cacheBitmap = null;          //定义一个内存中的图片，该图片作为缓冲区
+    public Canvas cacheCanvas = null;          //定义cacheBitmap上的Canvas对象
 
     private Paint mPaintMouse;//鼠标拖尾画笔
     private Paint mPaintSigmoid;//鼠标拖尾画笔
@@ -72,6 +71,7 @@ public class MainCanvas extends View {
 
     public MainCanvas(Context context) {
         super(context);
+        init();
     }
 
     public MainCanvas(Context context, AttributeSet attrs) {
@@ -154,7 +154,6 @@ public class MainCanvas extends View {
         canvas.save();                   //保存canvas的状态
         canvas.restore();                   //回复canvas之前的保存的状态，放置保存后对canvas执行的操作对后续的绘制有影响
 
-
     }
 
     private void sigmoid_curve(Canvas canvas) {
@@ -162,13 +161,13 @@ public class MainCanvas extends View {
             mPaintSigmoid.reset();
 
             int[] color = Bezier.rainBow((float)time % 300 / 300); //画笔同一颜色随时间渐变
-            mPaintSigmoid.setColor(Color.argb(128, color[0], color[1], color[2]));
+            mPaintSigmoid.setColor(Color.argb(20, color[0], color[1], color[2]));
 
             float x1 = 0,x2 = 0,y1 = 0,y2 = 0;
             for(float i = -5; i <= 5; i += 0.05){
                 float percent = (float)0.5 - Math.abs(i / 10);
                 x1 = i;
-                y1 = Sigmoid.sigmoid(i, Math.sin((double)time % 50 / 50 * 2 * Math.PI));
+                y1 = Sigmoid.sigmoid(i, Math.sin((double)time % 50 / 50 * 2 * Math.PI)) - (float)0.5;
                 x1 *= 50 + mouse_down_time * 3;
                 y1 *= 50 + mouse_down_time * 3;
                 if(i + 5 < 0.01){
