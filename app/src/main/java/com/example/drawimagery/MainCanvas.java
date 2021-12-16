@@ -27,6 +27,7 @@ public class MainCanvas extends View {
     Bitmap cacheBitmap = null;          //定义一个内存中的图片，该图片作为缓冲区
     Canvas cacheCanvas = null;          //定义cacheBitmap上的Canvas对象
 
+
     private Paint mPaintMouse;//鼠标拖尾画笔
     private Paint mPaintSigmoid;//鼠标拖尾画笔
 
