@@ -3,6 +3,7 @@ package com.example.drawimagery;
 import java.util.LinkedList;
 
 public class Bezier {
+
     public static float[] bezier(LinkedList<Float> theArrayX, LinkedList<Float> theArrayY, float t){ //贝塞尔公式调用
         float x = 0;
         float y = 0;
@@ -58,4 +59,5 @@ public class Bezier {
         int blue = 255 - b;
         return new int[] {red, green, blue};
     }
+
 }
