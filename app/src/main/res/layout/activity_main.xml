@@ -5,26 +5,33 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity"
     android:orientation="vertical">
-
-<!--    <com.example.drawimagery.MainCanvas-->
+<!--    <FrameLayout-->
 <!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="0dp"-->
-<!--        android:layout_weight="1"-->
-<!--        android:background="@drawable/bg">-->
-<!--    </com.example.drawimagery.MainCanvas>-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:layout_weight="1">-->
 
-    <com.example.drawimagery.PaletteView
-        android:id="@+id/palette"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="@drawable/bg"
-        />
+        <com.example.drawimagery.PaletteView
+            android:id="@+id/palette"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg"
+            android:layout_weight="1">
+        </com.example.drawimagery.PaletteView>
+
+<!--        <com.example.drawimagery.MainCanvas-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:background="@drawable/bg"-->
+<!--            android:layout_weight="1">-->
+<!--        </com.example.drawimagery.MainCanvas>-->
+
+<!--    </FrameLayout>-->
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:orientation="horizontal"
+        android:background="@drawable/bg"
         android:gravity="center"
         >
         <ImageView

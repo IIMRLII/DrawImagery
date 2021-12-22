@@ -9,6 +9,9 @@
         <entry key="..\:/DrawImagery/app/src/main/res/drawable/toolbar_item_bg.xml" value="0.24270833333333333" />
         <entry key="..\:/DrawImagery/app/src/main/res/drawable/undo.xml" value="0.16302083333333334" />
         <entry key="..\:/DrawImagery/app/src/main/res/layout/activity_main.xml" value="0.16393442622950818" />
+        <entry key="..\:/DrawImagery/app/src/main/res/layout/alert_background.xml" value="0.264" />
+        <entry key="..\:/DrawImagery/app/src/main/res/layout/alert_draw_points.xml" value="0.24114583333333334" />
+        <entry key="..\:/DrawImagery/app/src/main/res/menu/menu.xml" value="0.24114583333333334" />
       </map>
     </option>
   </component>

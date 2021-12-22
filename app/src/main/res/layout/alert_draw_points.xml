@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        tools:ignore="MissingConstraints">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="80dp"
+                android:layout_height="50dp"
+                android:text="橡皮粗细："
+                android:gravity="center|right"
+                android:layout_gravity="center" />
+
+            <SeekBar
+                android:id="@+id/eraser_width_choose"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:max="100"
+                android:progress="50"
+                style="@style/CustomSeekbarStyle" />
+
+            <TextView
+                android:id="@+id/eraser_width_view"
+                android:layout_width="30dp"
+                android:layout_height="50dp"
+                android:layout_weight="0.2"
+                android:gravity="center"
+                android:text="50"
+                android:inputType="number"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="80dp"
+                android:layout_height="50dp"
+                android:text="画笔粗细："
+                android:gravity="center|right"
+                android:layout_gravity="center" />
+
+            <SeekBar
+                android:id="@+id/paint_width_choose"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:max="30"
+                android:progress="10"
+                style="@style/CustomSeekbarStyle" />
+
+            <TextView
+                android:id="@+id/paint_width_view"
+                android:layout_width="30dp"
+                android:layout_height="50dp"
+                android:layout_weight="0.2"
+                android:gravity="center"
+                android:text="10"
+                android:inputType="number"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="80dp"
+                android:layout_height="50dp"
+                android:text="画笔数："
+                android:gravity="center|right"
+                android:layout_gravity="center" />
+
+            <SeekBar
+                android:id="@+id/draw_points_choose"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:max="32"
+                android:progress="8"
+                style="@style/CustomSeekbarStyle" />
+
+            <TextView
+                android:id="@+id/draw_points_view"
+                android:layout_width="30dp"
+                android:layout_height="50dp"
+                android:layout_weight="0.2"
+                android:gravity="center"
+                android:text="8"
+                android:inputType="number"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <Switch
+                    android:id="@+id/mirror_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="20dp"
+                    android:text="镜像 " />
+
+                <Switch
+                    android:id="@+id/dazzle_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="20dp"
+                    android:text="炫彩 " />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

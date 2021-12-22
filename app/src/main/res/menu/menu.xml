@@ -4,9 +4,26 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     >
 
-    <item android:id="@+id/save" app:showAsAction="always"
+    <item
+        android:id="@+id/points_change"
+        android:titleCondensed="画笔数量"
+        android:title="画笔数量"
+        android:icon="@drawable/ic_draw_points"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/color_change"
+        android:titleCondensed="画笔颜色"
+        android:title="画笔颜色"
+        android:icon="@drawable/ic_palette"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/save"
+        app:showAsAction="always"
         android:icon="@drawable/ic_save"
-          android:titleCondensed="保存图片"
-          android:title="保存图片"
-        />
+        android:titleCondensed="保存图片"
+        android:title="保存图片"/>
+
+
 </menu>
