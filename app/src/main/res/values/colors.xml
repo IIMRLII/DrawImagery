@@ -4,5 +4,5 @@
     <color name="colorPrimaryDark">#fb8c00</color>
     <color name="colorAccent">#fb8c00</color>
 
-    <drawable name="toolbar_bg">#30000000</drawable>
+    <drawable name="toolbar_bg">#11000000</drawable>
 </resources>

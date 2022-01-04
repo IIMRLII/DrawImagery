@@ -4,11 +4,18 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -36,6 +43,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, PaletteView.Callback,Handler.Callback {
 
@@ -44,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //    private static final int MSG_SAVE_SUCCESS = 1;
 //    private static final int MSG_SAVE_FAILED = 2;
 //    private Handler mHandler;
+    private int backgroundID = 0;
 
     private View mUndoView;
     private View mRedoView;
@@ -54,6 +64,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ProgressDialog mSaveProgressDlg;
     private static final int MSG_SAVE_SUCCESS = 1;
     private static final int MSG_SAVE_FAILED = 2;
+    private static final int MSG_SHARE_SUCCESS = 3;
+    private static final int MSG_SHARE_FAILED = 4;
     private Handler mHandler;
 
     private int color_choose_a;
@@ -68,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mPaletteView = (PaletteView) findViewById(R.id.palette);
+        mPaletteView = findViewById(R.id.palette);
         mPaletteView.setCallback(this);
 
         int color_choose = mPaletteView.getPenColor();
@@ -107,6 +119,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mHandler.removeMessages(MSG_SHARE_SUCCESS);
+        mHandler.removeMessages(MSG_SHARE_FAILED);
         mHandler.removeMessages(MSG_SAVE_FAILED);
         mHandler.removeMessages(MSG_SAVE_SUCCESS);
     }
@@ -126,6 +140,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean handleMessage(Message msg) {
         switch (msg.what){
+            case MSG_SHARE_FAILED:
+                mSaveProgressDlg.dismiss();
+                Toast.makeText(this,"分享失败",Toast.LENGTH_SHORT).show();
+                break;
+            case MSG_SHARE_SUCCESS:
+                mSaveProgressDlg.dismiss();
+                break;
             case MSG_SAVE_FAILED:
                 mSaveProgressDlg.dismiss();
                 Toast.makeText(this,"保存失败",Toast.LENGTH_SHORT).show();
@@ -144,11 +165,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         context.sendBroadcast(scanIntent);
     }
 
-    private static String saveImage(Bitmap bmp, int quality) {
+    private String saveImage(Bitmap bmp, int quality) {
         if (bmp == null) {
             return null;
         }
-        File appDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        File appDir = MainActivity.this.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         if (appDir == null) {
             return null;
         }
@@ -176,6 +197,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return null;
     }
 
+    /** * 从Assets中读取图片 */
+    private Bitmap getImageFromAssetsFile(String fileName){
+        Bitmap image = null;
+        AssetManager am = getResources().getAssets();
+        try {
+            InputStream is=am.open(fileName);
+            image = BitmapFactory.decodeStream(is);
+            is.close();
+        } catch (IOException e) {
+            e.printStackTrace();    }
+        return image;
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -187,15 +221,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        Bitmap bm = mPaletteView.buildBitmap();
-                        String savedFile = saveImage(bm, 100);
-                        if (savedFile != null) {
-                            scanFile(MainActivity.this, savedFile);
-                            filePath = savedFile;
-                            mHandler.obtainMessage(MSG_SAVE_SUCCESS).sendToTarget();
-                        }else{
-                            mHandler.obtainMessage(MSG_SAVE_FAILED).sendToTarget();
-                        }
+                        int paints = mPaletteView.paintsAmount;
+                        mPaletteView.paintsAmount = 0;
+                        MainActivity.this.runOnUiThread(new Runnable() {
+                            public void run() {
+                                mPaletteView.invalidate();
+                                Bitmap bm = mPaletteView.buildBitmap();
+                                mPaletteView.paintsAmount = paints;
+                                String savedFile = saveImage(bm, 100);
+                                if (savedFile != null) {
+                                    scanFile(MainActivity.this, savedFile);
+                                    filePath = savedFile;
+                                    mHandler.obtainMessage(MSG_SAVE_SUCCESS).sendToTarget();
+                                }else{
+                                    mHandler.obtainMessage(MSG_SAVE_FAILED).sendToTarget();
+                                }
+                            }
+                        });
                     }
                 }).start();
                 break;
@@ -211,17 +253,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 SeekBar color_choose_seekBar_r = (SeekBar) color_change_dialogView.findViewById(R.id.color_choose_r);
                 SeekBar color_choose_seekBar_g = (SeekBar) color_change_dialogView.findViewById(R.id.color_choose_g);
                 SeekBar color_choose_seekBar_b = (SeekBar) color_change_dialogView.findViewById(R.id.color_choose_b);
-                //色环输入监听
-                color_picker.setOnColorBackListener((a, r, g, b) -> {
-                    color_choose_a = a;
-                    color_choose_r = r;
-                    color_choose_g = g;
-                    color_choose_b = b;
-                    color_choose_seekBar_a.setProgress(color_choose_a);
-                    color_choose_seekBar_r.setProgress(color_choose_r);
-                    color_choose_seekBar_g.setProgress(color_choose_g);
-                    color_choose_seekBar_b.setProgress(color_choose_b);
-                    preInputColor.setText(intToHex(color_choose_a) + intToHex(color_choose_r) + intToHex(color_choose_g) + intToHex(color_choose_b));
+                preInputColor.setText(intToHex(color_choose_a) + intToHex(color_choose_r) + intToHex(color_choose_g) + intToHex(color_choose_b));
+                color_picker.setOnColorBackListener(new ColorPickerView.OnColorBackListener() {//色环输入监听
+                    @Override
+                    public void onColorBack(int a, int r, int g, int b) {
+                        color_choose_a = a;
+                        color_choose_r = r;
+                        color_choose_g = g;
+                        color_choose_b = b;
+                        color_choose_seekBar_a.setProgress(color_choose_a);
+                        color_choose_seekBar_r.setProgress(color_choose_r);
+                        color_choose_seekBar_g.setProgress(color_choose_g);
+                        color_choose_seekBar_b.setProgress(color_choose_b);
+                        mPenView.setSelected(true);
+                        mEraserView.setSelected(false);
+                        mPaletteView.setMode(PaletteView.Mode.DRAW);
+                        mPaletteView.isDazzleColor = false;
+                        preInputColor.setText(intToHex(color_choose_a) + intToHex(color_choose_r) + intToHex(color_choose_g) + intToHex(color_choose_b));
+                    }
                 });
                 preInputColor.addTextChangedListener(new TextWatcher() {//颜色输入监听
                     @Override
@@ -244,6 +293,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             color_choose_seekBar_r.setProgress(color_choose_r);
                             color_choose_seekBar_g.setProgress(color_choose_g);
                             color_choose_seekBar_b.setProgress(color_choose_b);
+                            mPenView.setSelected(true);
+                            mEraserView.setSelected(false);
+                            mPaletteView.setMode(PaletteView.Mode.DRAW);
+                            mPaletteView.isDazzleColor = false;
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -297,7 +350,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 color_change_dialog.show();
 
                 break;
-            case R.id.points_change:
+            case R.id.paint_change:
                 AlertDialog.Builder points_change_builder = new AlertDialog.Builder(this);
                 AlertDialog points_change_dialog = points_change_builder.create();
 
@@ -394,8 +447,134 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 points_change_dialog.setView(points_change_dialogView);
                 points_change_dialog.show();
                 break;
+            case R.id.share:
+                if(mSaveProgressDlg==null){
+                    initSaveProgressDlg();
+                }
+                mSaveProgressDlg.show();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        int paints = mPaletteView.paintsAmount;
+                        mPaletteView.paintsAmount = 0;
+                        MainActivity.this.runOnUiThread(new Runnable() {
+                            public void run() {
+                                mPaletteView.invalidate();
+                                Bitmap bm = mPaletteView.buildBitmap();
+                                mPaletteView.paintsAmount = paints;
+                                String savedFile = saveImage(bm, 100);
+                                if (savedFile != null) {
+                                    scanFile(MainActivity.this, savedFile);
+                                    filePath = savedFile;
+                                    /** * 分享图片 */
+                                    Intent share_intent = new Intent();
+                                    share_intent.setAction(Intent.ACTION_SEND);//设置分享行为
+                                    share_intent.setType("image/*");  //设置分享内容的类型
+                                    share_intent.putExtra(Intent.EXTRA_STREAM, filePath);
+                                    //创建分享的Dialog
+                                    share_intent.putExtra(Intent.EXTRA_SUBJECT, "分享");//添加分享内容标题
+                                    share_intent = Intent.createChooser(share_intent, "分享");
+                                    startActivity(share_intent);
+                                    mHandler.obtainMessage(MSG_SHARE_SUCCESS).sendToTarget();
+                                }else{
+                                    mHandler.obtainMessage(MSG_SHARE_FAILED).sendToTarget();
+                                }
+                            }
+                        });
+                    }
+                }).start();
+                break;
+            case R.id.about:
+                final AlertDialog.Builder normalDialog = new AlertDialog.Builder(MainActivity.this);
+                //normalDialog.setIcon(R.drawable.buttom_yello);
+                normalDialog.setTitle("关于绘意");
+                normalDialog.setMessage("图案艺术：刘睿\n音乐甄选：吴越\n组长QQ：1104052058（刘）");
+                normalDialog.setNegativeButton("返回", (dialog, which) -> dialog.dismiss());
+                normalDialog.show();
+                break;
+            case R.id.background_change:
+                if (ping()) {
+                    new DownloadImageTask().execute("https://api.ixiaowai.cn/gqapi/gqapi.php");
+                } else {
+                    backgroundID++;
+                    backgroundID %= 3;
+                    switch (backgroundID) {
+                        case 0:
+                            mPaletteView.setBackground(getResources().getDrawable(R.drawable.bg1));
+                            break;
+                        case 1:
+                            mPaletteView.setBackground(getResources().getDrawable(R.drawable.bg2));
+                            break;
+                        case 2:
+                            mPaletteView.setBackground(getResources().getDrawable(R.drawable.bg3));
+                            break;
+                    }
+                }
+                break;
+            case R.id.play:
+                    mPaletteView.isRotatePath = true;
+//                    if (mPaletteView.mMode == PaletteView.Mode.DRAW || mPaletteView.mCanEraser) mPaletteView.saveDrawingPath();
+                    for (PaletteView.DrawingInfo drawingInfo : mPaletteView.mDrawingList) {
+                            drawingInfo.degree = (float) (Math.random() - 0.5F) * 2;
+                        }
+                break;
+            case R.id.pause:
+                    mPaletteView.isRotatePath = false;
+                break;
         }
         return true;
+    }
+
+    public static final boolean ping() {
+
+        String result = null;
+        try {
+            String ip = "www.baidu.com";// ping 的地址，可以换成任何一种可靠的外网
+            Process p = Runtime.getRuntime().exec("ping -c 1 -w 100 " + ip);// ping网址3次
+            // ping的状态
+            int status = p.waitFor();
+            if (status == 0) {
+                result = "success";
+                return true;
+            } else {
+                result = "failed";
+            }
+        } catch (IOException e) {
+            result = "IOException";
+        } catch (InterruptedException e) {
+            result = "InterruptedException";
+        } finally {
+            Log.d("----result---", "result = " + result);
+        }
+        return false;
+    }
+
+    private class DownloadImageTask extends AsyncTask<String, Void, Drawable> {
+        protected Drawable doInBackground(String... urls) {
+            return loadImageFromNetwork(urls[0]);
+        }
+
+        protected void onPostExecute(Drawable result) {
+            mPaletteView.setBackground(result);
+        }
+    }
+
+    private Drawable loadImageFromNetwork(String imageUrl)
+    {
+        Drawable drawable = null;
+        try {
+            // 可以在这里通过文件名来判断，是否本地有此图片
+            drawable = Drawable.createFromStream(new URL(imageUrl).openStream(), "image.jpg");
+        } catch (IOException e) {
+            Log.d("test", e.getMessage());
+        }
+        if (drawable == null) {
+            Log.d("test", "null drawable");
+        } else {
+            Log.d("test", "not null drawable");
+        }
+
+        return drawable ;
     }
 
     @Override
@@ -424,7 +603,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mPaletteView.setMode(PaletteView.Mode.ERASER);
                 break;
             case R.id.clear:
-                mPaletteView.clear();
+                final AlertDialog.Builder normalDialog = new AlertDialog.Builder(MainActivity.this);
+                //normalDialog.setIcon(R.drawable.buttom_yello);
+                normalDialog.setTitle("清屏");
+                normalDialog.setMessage("您确定要清空屏幕吗?");
+                normalDialog.setNegativeButton("取消", (dialog, which) -> dialog.dismiss());
+                normalDialog.setPositiveButton("确定", (dialog, which) -> {
+                    mPaletteView.clear();
+                    Toast.makeText(MainActivity.this,"清屏成功",Toast.LENGTH_LONG).show();
+                    dialog.dismiss();
+                });
+                normalDialog.show();
                 break;
         }
     }

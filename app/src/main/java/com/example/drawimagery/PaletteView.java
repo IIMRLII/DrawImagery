@@ -36,6 +36,7 @@ public class PaletteView extends View {
 
     public static boolean isMirrorDraw = true;
     public static boolean isDazzleColor = false;
+    public static boolean isRotatePath = false;
 
     public static Matrix matrix = new Matrix();//矩阵变换
 
@@ -74,9 +75,9 @@ public class PaletteView extends View {
     private Xfermode mXferModeDraw;
     private int mDrawSize;
     private int mEraserSize;
-    private int mMouseAlpha = 188;
+    private int mMouseAlpha = 255;
 
-    private boolean mCanEraser;
+    public boolean mCanEraser;
 
     private Callback mCallback;
 
@@ -85,7 +86,7 @@ public class PaletteView extends View {
         ERASER
     }
 
-    private Mode mMode = Mode.DRAW;
+    public Mode mMode = Mode.DRAW;
 
     Handler handler = new Handler();
     Runnable runnable = new Runnable() {
@@ -108,7 +109,13 @@ public class PaletteView extends View {
                 mouseX.poll();
                 mouseY.poll();
             }
-            invalidate();//告诉主线程重新绘制
+
+            if (isRotatePath) {
+                reDraw();
+            } else {
+                invalidate();
+            }
+
             handler.postDelayed(this, 20);//每20ms循环一次，50fps
         }
     };
@@ -150,7 +157,7 @@ public class PaletteView extends View {
         setDrawingCacheEnabled(true);
 
         paintsAmount = initPaintsAmount;
-        matrix.setScale (-1.0F, 1.0F);//水平对称
+        matrix.postScale (-1.0F, 1.0F);//水平对称
 
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
         mPaint.setStyle(Paint.Style.STROKE);
@@ -179,22 +186,29 @@ public class PaletteView extends View {
         mBufferCanvas = new Canvas(mBufferBitmap);
     }
 
-    private abstract static class DrawingInfo {
+    public class DrawingInfo {
+        Path path;
+//        Path pathRotate;
+        Path pathMirror;
         Paint paint;
+        float degree;
+        float total_degree = 0;
+//        Matrix pathMatrix;
         int paints_amount = paintsAmount;
         boolean mirror_draw = isMirrorDraw;
 
-        abstract void draw(Canvas canvas);
-    }
+//        void rotate() {
+//            pathRotate.transform(pathMatrix);
+//            pathMirror.transform(pathMatrix);
+//        }
 
-    private static class PathDrawingInfo extends DrawingInfo{
-        Path path;
-        Path pathMirror;
-
-        @Override
         void draw(Canvas canvas) {
+//            if (isRotatePath) rotate();
+            if (isRotatePath) total_degree += degree;
+
             canvas.save();
             canvas.translate(canvasCenterX, canvasCenterY);
+            canvas.rotate(total_degree);
             for(int i = 0;i < paints_amount;i++) {
                 canvas.drawPath(path, paint);
                 canvas.rotate(360 / (float)paints_amount);
@@ -204,9 +218,10 @@ public class PaletteView extends View {
             if (mirror_draw) {
                 canvas.save();
                 canvas.translate(canvasCenterX, canvasCenterY);
-                path.transform(matrix, pathMirror);//镜像对称
+                canvas.rotate(total_degree);
+                //镜像对称
                 for(int i = 0;i < paints_amount;i++) {
-                    canvas.drawPath(path, paint);
+                    canvas.drawPath(pathMirror, paint);
                     canvas.rotate(360 / (float)paints_amount);
                 }
                 canvas.restore();
@@ -333,7 +348,7 @@ public class PaletteView extends View {
         return result;
     }
 
-    private void saveDrawingPath(){
+    public void saveDrawingPath(){
         if (mDrawingList == null) {//初始化绘制操作列表
             mDrawingList = new ArrayList<>(MAX_CACHE_STEP);
         } else if (mDrawingList.size() == MAX_CACHE_STEP) {
@@ -341,8 +356,14 @@ public class PaletteView extends View {
         }
         Path cachePath = new Path(mPath);
         Paint cachePaint = new Paint(mPaint);
-        PathDrawingInfo info = new PathDrawingInfo();
-        info.path = cachePath;
+        DrawingInfo info = new DrawingInfo();
+        info.path = new Path(cachePath);
+        info.degree = (float) (Math.random() - 0.5F) * 2;
+//        info.pathMatrix = new Matrix();
+//        info.pathMatrix.setRotate(((float) Math.random() - 0.5F) * 2);
+//        info.pathRotate = new Path(cachePath);
+        info.pathMirror = new Path(cachePath);
+        info.pathMirror.transform(matrix);
         info.paint = cachePaint;
         info.paints_amount = paintsAmount;
         info.mirror_draw = isMirrorDraw;
@@ -385,36 +406,33 @@ public class PaletteView extends View {
                 mPath.moveTo(coordinateX, coordinateY);
                 break;
             case MotionEvent.ACTION_MOVE:
-                mPath.quadTo(mLastX, mLastY, (coordinateX + mLastX) / 2, (coordinateY + mLastY) / 2);
-                if (mBufferBitmap == null) initBuffer();
-                if (mMode == Mode.ERASER && !mCanEraser) break;//橡皮擦就不画
+                if (!isRotatePath) {
+                    mPath.quadTo(mLastX, mLastY, (coordinateX + mLastX) / 2, (coordinateY + mLastY) / 2);
+                    if (mBufferBitmap == null) initBuffer();
+                    if (mMode == Mode.ERASER && !mCanEraser) break;//橡皮擦就不画
 
-                if (isDazzleColor) {
-                    int[] color = Bezier.rainBow((float)time % 300 / 300);
-                    mPaint.setColor(Color.argb(255, color[0], color[1], color[2]));
-                }
-                mBufferCanvas.save();
-                mBufferCanvas.translate(canvasCenterX, canvasCenterY);
-                for (int i = 0;i < paintsAmount; i++) {
-//                    mPaint.setColor(Color.argb(255,255,255,0));
-//                    mPaint.setStrokeWidth(20);
-//                    mBufferCanvas.drawPath(mPath, mPaint);
-//                    mPaint.setColor(Color.argb(255,0,128,255));
-//                    mPaint.setStrokeWidth(12);
-                    mBufferCanvas.drawPath(mPath, mPaint);
-                    mBufferCanvas.rotate(360 / (float)paintsAmount);
-                }
-                mBufferCanvas.restore();
-
-                if (isMirrorDraw) {
+                    if (isDazzleColor) {
+                        int[] color = Bezier.rainBow((float) time % 300 / 300);
+                        mPaint.setColor(Color.argb(255, color[0], color[1], color[2]));
+                    }
                     mBufferCanvas.save();
                     mBufferCanvas.translate(canvasCenterX, canvasCenterY);
-                    for (int j = 0; j < paintsAmount; j++) {
-                        mPath.transform(matrix, mPathMirror);
-                        mBufferCanvas.drawPath(mPathMirror, mPaint);
-                        mBufferCanvas.rotate(360 / (float)paintsAmount);
+                    for (int i = 0; i < paintsAmount; i++) {
+                        mBufferCanvas.drawPath(mPath, mPaint);
+                        mBufferCanvas.rotate(360 / (float) paintsAmount);
                     }
                     mBufferCanvas.restore();
+
+                    if (isMirrorDraw) {
+                        mBufferCanvas.save();
+                        mBufferCanvas.translate(canvasCenterX, canvasCenterY);
+                        for (int j = 0; j < paintsAmount; j++) {
+                            mPath.transform(matrix, mPathMirror);
+                            mBufferCanvas.drawPath(mPathMirror, mPaint);
+                            mBufferCanvas.rotate(360 / (float) paintsAmount);
+                        }
+                        mBufferCanvas.restore();
+                    }
                 }
 
 //                invalidate();

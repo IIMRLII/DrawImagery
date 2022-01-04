@@ -48,8 +48,6 @@ public class ColorPickerView extends View {
             0xFF0000FF, 0xFF00FFFF, 0xFF00FF00, 0xFFFFFF00, 0xFFFF0000};
     private boolean mRedrawHSV;
     private boolean mRedrawTransparent;
-    private boolean IsPressCenter;
-    private boolean IsMoveCenter;
 
     private int CenterX = 100;
     private int CenterY = 100;
@@ -179,19 +177,6 @@ public class ColorPickerView extends View {
                 CenterX + (float) (95 * Zoom), (float) (100 * Zoom));
         canvas.drawRect(dst, paintTransparent);
 
-        if (IsPressCenter) {
-            paintCenter.setStyle(Paint.Style.STROKE);
-
-            if (IsMoveCenter)
-                paintCenter.setAlpha(0xFF);
-            else
-                paintCenter.setAlpha(0x66);
-
-            canvas.drawCircle(0, 0, CenterRadius + paintCenter.getStrokeWidth(), paintCenter);
-            paintCenter.setStyle(Paint.Style.FILL);
-            paintCenter.setColor(color);
-        }
-
         //十字准星
         int current_color = paintCenter.getColor();
         mousePaint.setColor(Color.argb(255, 255 - Color.red(current_color), 255 - Color.green(current_color), 255 - Color.blue(current_color)));
@@ -249,28 +234,18 @@ public class ColorPickerView extends View {
         if(y < -100 * Zoom || y > 100 * Zoom) return false;
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN: {
-                IsPressCenter = inCenter;
-                if (inCenter) {
-                    IsMoveCenter = true;
-                    invalidate();
-                    break;
-                }
+
             }
             case MotionEvent.ACTION_MOVE: {
-                if (IsPressCenter) {
-                    if (IsMoveCenter != inCenter) {
-                        IsMoveCenter = inCenter;
-                        invalidate();
-                    }
-                } else if ((x >= -CenterX && x <= CenterX)
-                        && (y >= -CenterY && y <= CenterY)) {
+                if ((x >= -CenterX && x <= CenterX)
+                        && (y >= -CenterY && y <= CenterY)) {//色环选色
                     float angle = (float) java.lang.Math.atan2(y, x);
                     float unit = angle / (2 * PI);
                     if (unit < 0)
                         unit += 1;
                     paintCenter.setColor(interpColor(arrColorCircle, unit));
                     invalidate();
-                } else if (x >= CenterX + 20 * Zoom && x <= CenterX + 50 * Zoom) {
+                } else if (x >= CenterX + 20 * Zoom && x <= CenterX + 50 * Zoom) {//饱和度
                     int a, r, g, b, c0, c1;
                     float p;
 
@@ -295,7 +270,7 @@ public class ColorPickerView extends View {
                         l.onColorBack(a, r, g, b);
                     }
                     invalidate();
-                } else if (x >= CenterX + 65 * Zoom && x <= CenterX + 95 * Zoom) {
+                } else if (x >= CenterX + 65 * Zoom && x <= CenterX + 95 * Zoom) {//透明度
                     float p;
                     if (y < 0) {
                         p = (float) ((y + 100 * Zoom) / (200 * Zoom));
@@ -317,11 +292,7 @@ public class ColorPickerView extends View {
                 break;
             }
             case MotionEvent.ACTION_UP: {
-                if (IsPressCenter) {
-                    IsPressCenter = false;
-                    invalidate();
-                }
-                break;
+
             }
         }
         return true;

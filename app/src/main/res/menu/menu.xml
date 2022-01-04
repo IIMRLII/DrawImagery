@@ -5,16 +5,23 @@
     >
 
     <item
-        android:id="@+id/points_change"
-        android:titleCondensed="画笔数量"
-        android:title="画笔数量"
+        android:id="@+id/background_change"
+        android:titleCondensed="背景"
+        android:title="背景"
+        android:icon="@drawable/ic_background_change"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/paint_change"
+        android:titleCondensed="画笔"
+        android:title="画笔"
         android:icon="@drawable/ic_draw_points"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/color_change"
-        android:titleCondensed="画笔颜色"
-        android:title="画笔颜色"
+        android:titleCondensed="调色"
+        android:title="调色"
         android:icon="@drawable/ic_palette"
         app:showAsAction="always" />
 
@@ -22,8 +29,30 @@
         android:id="@+id/save"
         app:showAsAction="always"
         android:icon="@drawable/ic_save"
-        android:titleCondensed="保存图片"
-        android:title="保存图片"/>
+        android:titleCondensed="保存"
+        android:title="保存"/>
 
+    <item
+        android:id="@+id/share"
+        android:titleCondensed="分享"
+        android:title="分享"
+        app:showAsAction="never" />
 
+    <item
+        android:id="@+id/play"
+        android:titleCondensed="播放"
+        android:title="播放"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/pause"
+        android:titleCondensed="暂停 "
+       android:title="暂停"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/about"
+        android:titleCondensed="关于"
+        android:title="关于"
+        app:showAsAction="never" />
 </menu>
